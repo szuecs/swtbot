@@ -95,7 +95,6 @@ public class RmiSWTWorkbenchBot implements IRmiSWTWorkbenchBot {
 		}
 
 		System.err.println("Server ready");
-
 	}
 
 	private void shutdown() {
