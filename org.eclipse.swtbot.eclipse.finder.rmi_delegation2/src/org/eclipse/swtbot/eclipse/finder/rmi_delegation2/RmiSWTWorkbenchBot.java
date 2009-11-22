@@ -71,13 +71,13 @@ public class RmiSWTWorkbenchBot implements IRmiSWTWorkbenchBot {
 		System.err.println("init");
 	}
 
-	public static void main(String[] args) throws Exception {
-		System.err.println("main"); // RmiSWTWorkbenchBot
-		SWTWorkbenchBot swtwbb = new SWTWorkbenchBot();
-		System.err.println("swtwbb");
-		new RmiSWTWorkbenchBot(swtwbb).init();
-		System.err.println("init");
-	}
+	// public static void main(String[] args) throws Exception {
+	// System.err.println("main"); // RmiSWTWorkbenchBot
+	// SWTWorkbenchBot swtwbb = new SWTWorkbenchBot();
+	// System.err.println("swtwbb");
+	// new RmiSWTWorkbenchBot(swtwbb).init();
+	// System.err.println("init");
+	// }
 
 	public RmiSWTWorkbenchBot(SWTWorkbenchBot delegate) {
 		super();
@@ -136,16 +136,6 @@ public class RmiSWTWorkbenchBot implements IRmiSWTWorkbenchBot {
 				}
 			}
 		});
-	}
-
-	/** RMI exported Methods */
-
-	public void closeViewByTitle(String title) {
-
-	}
-
-	public void pushButton(String name) {
-
 	}
 
 	/**
@@ -1983,6 +1973,83 @@ public class RmiSWTWorkbenchBot implements IRmiSWTWorkbenchBot {
 		if (result.e != null)
 			throw result.e;
 		return result.result;
+	}
+
+	/** RMI exported Methods */
+
+	public void closeViewByTitle(String title) {
+		System.err.println("closeViewByTitle");
+		delegate.viewByTitle(title).close();
+	}
+
+	public void clickButton(String label) {
+		System.err.println("clickButton");
+		delegate.buttonWithLabel(label).click();
+	}
+
+	public void clickMenuByName(String name) throws RemoteException {
+		System.err.println("clickMenuByName(String name)");
+		delegate.menu(name).click();
+	}
+
+	public void clickMenuByName(List<String> names) throws RemoteException {
+		System.err.println("clickMenuByName(List<String> names)");
+		SWTBotMenu menu = null;
+		for (String name : names) {
+			menu = (menu == null) ? delegate.menu(name) : menu(name);
+		}
+		menu.click();
+	}
+
+	public void activateShellByName(String name) throws RemoteException {
+		System.err.println("activateShellByName(String name)");
+		delegate.shell(name).activate();
+	}
+
+	public void botSleep(long millis) throws RemoteException {
+		System.err.println("botSleep(long millis)");
+		delegate.sleep(millis);
+	}
+
+	public void clickButton(int num) throws RemoteException {
+		System.err.println("clickButton(int num)");
+		delegate.button(num).click();
+	}
+
+	public void clickToolbarButtonByTooltipOnViewByTitle(String title,
+			String tooltip) throws RemoteException {
+		System.err.println("clickToolbarButtonByNameOnViewByTitle("
+				+ "String title, String buttonName)");
+		delegate.viewByTitle(title).toolbarButton(tooltip);
+	}
+
+	public boolean isButtonEnabled(String name) throws RemoteException {
+		System.err.println("isButtonEnabled(String name)");
+		return delegate.button(name).isEnabled();
+	}
+
+	public boolean isButtonEnabled(int num) throws RemoteException {
+		System.err.println("isButtonEnabled(int num)");
+		return delegate.button(num).isEnabled();
+	}
+
+	// staticBot.shell("New Project").activate();
+	// staticBot.tree().select("Java Project");
+	public void selectTreeByLabel(String label) throws RemoteException {
+		System.err.println("selectTreeByLabel(String label)");
+		delegate.tree().select(label);
+	}
+
+	public void setTextWithLabel(String label, String text)
+			throws RemoteException {
+		System.err.println("setTextWithLabel(String label, String text)");
+		delegate.textWithLabel(label).setText(text);
+	}
+
+	public void setTextWithText(String match, String replace)
+			throws RemoteException {
+		System.err.println("setTextWithLabel(String label, String text)");
+		delegate.text(match).setText(replace);
 	}
 
 }
