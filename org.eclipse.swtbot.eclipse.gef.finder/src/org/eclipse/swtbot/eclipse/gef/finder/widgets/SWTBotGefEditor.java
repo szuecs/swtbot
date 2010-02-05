@@ -35,9 +35,7 @@ import org.eclipse.gef.palette.PaletteEntry;
 import org.eclipse.gef.palette.ToolEntry;
 import org.eclipse.gef.ui.parts.GraphicalViewerImpl;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swtbot.eclipse.finder.SWTWorkbenchBot;
 import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotEditor;
@@ -158,7 +156,9 @@ public class SWTBotGefEditor extends SWTBotEditor {
     	return (SWTBotGefConnectionEditPart) createEditPart((EditPart) part);
     }
 
-    //TODO comment
+    /**
+     * Activate the default tool.
+     */
     public void activateDefaultTool() {
         UIThreadRunnable.syncExec(new VoidResult() {
             public void run() {
@@ -168,27 +168,43 @@ public class SWTBotGefEditor extends SWTBotEditor {
         });
     }
 
-    //TODO comment
+    /**
+     * Activate the tool with the specified label. If there is many tools with the same label the first one will be used. See {@link SWTBotGefEditor#activateTool(String, int)}
+     * @param label the label of the tool to activate
+     * @return the editor bot
+     * @throws WidgetNotFoundException if the tool with label specified could not be found
+     */
     public SWTBotGefEditor activateTool(final String label) throws WidgetNotFoundException {
-        activateTool(Pattern.compile(Pattern.quote(label)));
+        activateTool(Pattern.compile(Pattern.quote(label)), 0);
         return this;
     }
 
-    private SWTBotGefEditor activateTool(final Pattern labelMatcher) throws WidgetNotFoundException {
+    /**
+     * Activate the tool with the specified label and the specified index. This method should be used only if there is many tools with the same label. See {@link SWTBotGefEditor#activateTool(String)}
+     * @param label the label of the tool to activate
+     * @param index the index to use in order to make the selection. 
+     * @return the editor bot
+     * @throws WidgetNotFoundException if the tool with label specified could not be found
+     */
+    public SWTBotGefEditor activateTool(final String label, int index) throws WidgetNotFoundException {
+        activateTool(Pattern.compile(Pattern.quote(label)), index);
+        return this;
+    }
+
+    
+    private SWTBotGefEditor activateTool(final Pattern labelMatcher, final int index) throws WidgetNotFoundException {
         final WidgetNotFoundException[] exception = new WidgetNotFoundException[1];
         UIThreadRunnable.syncExec(new VoidResult() {
             public void run() {
                 final EditDomain editDomain = getEditDomain();
                 final List<PaletteEntry> entries = new PaletteFinder(editDomain).findEntries(new ToolEntryLabelMatcher(labelMatcher));
-                if (entries.size() == 1) {
-                    final PaletteEntry paletteEntry = entries.get(0);
+                if (entries.size() > 0) {
+                    final PaletteEntry paletteEntry = entries.get(index);
                     if (paletteEntry instanceof ToolEntry) {
                         editDomain.setActiveTool(((ToolEntry) paletteEntry).createTool());
                     } else {
                         exception[0] = new WidgetNotFoundException(String.format("%s is not a tool entry, it's a %s", labelMatcher.toString(), paletteEntry.getClass().getName()));
                     }
-                } else if (entries.size() > 1) {
-                    exception[0] = new WidgetNotFoundException(String.format("%s is ambiguous; %s tool entries found", labelMatcher.toString(), entries.size()));
                 } else {
                     exception[0] = new WidgetNotFoundException(labelMatcher.toString());
                 }
@@ -207,7 +223,6 @@ public class SWTBotGefEditor extends SWTBotEditor {
         return editDomain;
     }
 
-    //TODO should be in a separate class
     /**
      * type the given text into the graphical editor, presuming that it is
      * already in 'direct edit' mode.
@@ -217,72 +232,16 @@ public class SWTBotGefEditor extends SWTBotEditor {
      * @throws WidgetNotFoundException
      */
     public void directEditType(String text) throws WidgetNotFoundException {
+    	/* wait until text widget appears */ 
+    	bot.text();
+    	/* find it now */
         List<Text> controls = bot.getFinder().findControls(getWidget(), new IsInstanceOf<Text>(Text.class), true);
         if (controls.size() == 1) {
-            final Text textControl = controls.get(0);
-            UIThreadRunnable.syncExec(new VoidResult() {
-                public void run() {
-                    textControl.setText("");
-                }
-            });
-            for (int x = 0; x < text.length(); ++x) {
-                final char c = text.charAt(x);
-                UIThreadRunnable.syncExec(new VoidResult() {
-                    public void run() {
-                        textControl.setFocus();
-                        textControl.notifyListeners(SWT.KeyDown, keyEvent(SWT.NONE, c, 0));
-                        textControl.notifyListeners(SWT.KeyUp, keyEvent(SWT.NONE, c, 0));
-                        textControl.setText(textControl.getText() + c);
-                    }
-                });
-                try {
-                    Thread.sleep(50L);
-                } catch (InterruptedException e) {
-                }
-            }
-
-            // apply the value with a default selection event
-            UIThreadRunnable.syncExec(new VoidResult() {
-                public void run() {
-                    textControl.setFocus();
-                    textControl.notifyListeners(SWT.DefaultSelection, createEvent());
-                }
-            });
+            final Text textControl = controls.get(0);	
+            canvas.typeText(textControl, text);
         } else {
             throw new WidgetNotFoundException(String.format("Expected to find one text control, but found %s.  Is the editor in direct-edit mode?", controls.size()));
         }
-    }
-
-    /**
-     * @param c
-     *            the character.
-     * @param modificationKey
-     *            the modification key.
-     * @param keyCode
-     *            the keycode.
-     * @return a key event with the specified keys.
-     * @see Event#keyCode
-     * @see Event#character
-     * @see Event#stateMask
-     * @since 1.2
-     */
-    @Deprecated
-    protected Event keyEvent(int modificationKey, char c, int keyCode) {
-        Event keyEvent = createEvent();
-        keyEvent.stateMask = modificationKey;
-        keyEvent.character = c;
-        keyEvent.keyCode = keyCode;
-
-        return keyEvent;
-    }
-
-    @Deprecated
-    protected Event createEvent() {
-        Event event = new Event();
-        event.time = (int) System.currentTimeMillis();
-        event.widget = getWidget();
-        event.display = bot.getDisplay();
-        return event;
     }
 
     /**
@@ -293,7 +252,7 @@ public class SWTBotGefEditor extends SWTBotEditor {
      * @throws WidgetNotFoundException
      */
 	public List<SWTBotGefEditPart> editParts(Matcher<? extends EditPart> matcher) throws WidgetNotFoundException {
-        return rootEditPart().ancestors(matcher);
+        return rootEditPart().descendants(matcher);
     }
 
 	protected SWTBotGefFigureCanvas getCanvas() {
@@ -369,7 +328,7 @@ public class SWTBotGefEditor extends SWTBotEditor {
      * @param yPosition the relative y position within the graphical viewer
      */
     public void mouseMoveLeftClick(final int xPosition, final int yPosition) {
-        UIThreadRunnable.syncExec(new VoidResult() {
+        UIThreadRunnable.asyncExec(new VoidResult() {
             public void run() {
         		canvas.mouseMoveLeftClick(xPosition, yPosition);
             }
@@ -386,7 +345,7 @@ public class SWTBotGefEditor extends SWTBotEditor {
      * @param toYPosition the relative y position within the graphical viewer to drag to
      */
     public void mouseDrag(final int fromXPosition, final int fromYPosition, final int toXPosition, final int toYPosition) {
-        UIThreadRunnable.syncExec(new VoidResult() {
+        UIThreadRunnable.asyncExec(new VoidResult() {
             public void run() {
                 canvas.mouseDrag(fromXPosition, fromYPosition, toXPosition, toYPosition);
             }
@@ -481,20 +440,14 @@ public class SWTBotGefEditor extends SWTBotEditor {
 	                return child;
 	            }
 	           
-	           // find label in children
-	           if (findLabelFigure(figure, label))  {
 	               SWTBotGefEditPart childEditPart = getEditPart(child, label);
 	               if (childEditPart!=null) {
 	                   return childEditPart;
 	               }
-	               return child;
-	           }
-	           
-	           // find label in connections
-	           SWTBotGefEditPart childEditPart = getEditPart(child, label);
-	           if (childEditPart != null) {
-	               return childEditPart;
-	           }
+	               
+	               if (findLabelFigure(figure, label))
+	            	   return child;
+	               return null;
 	       }
 	       return null;
 	   }

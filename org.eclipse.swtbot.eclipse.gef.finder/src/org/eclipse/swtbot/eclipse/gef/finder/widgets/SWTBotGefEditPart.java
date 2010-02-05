@@ -18,9 +18,11 @@ import java.util.List;
 import java.util.Stack;
 
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.GraphicalEditPart;
+import org.eclipse.gef.requests.DirectEditRequest;
 import org.eclipse.swtbot.swt.finder.finders.UIThreadRunnable;
 import org.eclipse.swtbot.swt.finder.results.Result;
 import org.eclipse.swtbot.swt.finder.results.VoidResult;
@@ -48,8 +50,21 @@ public class SWTBotGefEditPart {
 		this.part = part;
 	}
 
-	
+	/**
+	 * get the parent, or null if this is the root edit part.
+	 */
+	public SWTBotGefEditPart parent() {
+		return UIThreadRunnable.syncExec(new Result<SWTBotGefEditPart>() {
+			public SWTBotGefEditPart run() {
+				return graphicalEditor.createEditPart(part.getParent());
+			}
+		});
+	}
 
+	/**
+	 * Get the children of this edit part.
+	 * @return the edit part's children
+	 */
 	@SuppressWarnings("unchecked")
 	public List<SWTBotGefEditPart> children() {
 		return UIThreadRunnable.syncExec(new Result<List<SWTBotGefEditPart>>() {
@@ -64,17 +79,17 @@ public class SWTBotGefEditPart {
 	}
 
 	/**
-	 * find ancestors that match
+	 * find descendants that match.
 	 * 
 	 * @param matcher the matcher that matches against {@link org.eclipse.gef.EditPart}
 	 * 
 	 * @return a list of matches or an empty list if there are none
 	 */
 	@SuppressWarnings("unchecked")
-	public List<SWTBotGefEditPart> ancestors(final Matcher<? extends EditPart> matcher) {
+	public List<SWTBotGefEditPart> descendants(final Matcher<? extends EditPart> matcher) {
 		return  UIThreadRunnable.syncExec(new Result<List<SWTBotGefEditPart>>() {
 			public List<SWTBotGefEditPart> run() {
-				List<SWTBotGefEditPart> ancestors = new ArrayList<SWTBotGefEditPart>();
+				List<SWTBotGefEditPart> descendants = new ArrayList<SWTBotGefEditPart>();
 				Stack<SWTBotGefEditPart> parts = new Stack<SWTBotGefEditPart>();
 				parts.push(SWTBotGefEditPart.this);
 				while (!parts.isEmpty()) {
@@ -82,12 +97,12 @@ public class SWTBotGefEditPart {
 					for (org.eclipse.gef.EditPart child: ((List<org.eclipse.gef.EditPart>) part.part.getChildren())) {
 						SWTBotGefEditPart childPart = graphicalEditor.createEditPart(child);
 						if (matcher.matches(child)) {
-							ancestors.add(childPart);
+							descendants.add(childPart);
 						}
 						parts.push(childPart);
 					}	
 				}
-				return ancestors;
+				return descendants;
 			}
 		});
 	}
@@ -118,32 +133,65 @@ public class SWTBotGefEditPart {
 		graphicalEditor.select(this);
 		return this;
 	}
-	
+
 	/**
-	 * click on the edit part
+	 * click on the edit part.
 	 */
 	public SWTBotGefEditPart click() {
-		UIThreadRunnable.syncExec(new VoidResult() {
+		final Rectangle bounds = getBounds();
+		return click(bounds.getTopLeft());
+	}
+	
+	/**
+	 * click on the edit part at the specified location
+	 */
+	public SWTBotGefEditPart click(final Point location) {
+		UIThreadRunnable.asyncExec(new VoidResult() {
 			public void run() {
-				IFigure figure = ((GraphicalEditPart) part).getFigure();
-				Rectangle bounds = figure.getBounds().getCopy();
-				figure.translateToAbsolute(bounds);
-				graphicalEditor.getCanvas().mouseEnterLeftClickAndExit(bounds.x, bounds.y);
+				graphicalEditor.getCanvas().mouseEnterLeftClickAndExit(location.x, location.y);
 			}		
 		});
 		return this;
 	}
-	
+
 	/**
-	 * get the parent, or null if this is the root edit part.
+	 * double click on the edit part.
 	 */
-	public SWTBotGefEditPart parent() {
-		return UIThreadRunnable.syncExec(new Result<SWTBotGefEditPart>() {
-			public SWTBotGefEditPart run() {
-				return graphicalEditor.createEditPart(part.getParent());
+	public SWTBotGefEditPart doubleClick() {
+		final Rectangle bounds = getBounds();
+		UIThreadRunnable.asyncExec(new VoidResult() {
+			public void run() {
+				graphicalEditor.getCanvas().mouseMoveDoubleClick(bounds.x, bounds.y);
+			}		
+		});
+		return this;
+	}
+
+	private Rectangle getBounds() {
+		final IFigure figure = ((GraphicalEditPart) part).getFigure();
+		final Rectangle bounds = figure.getBounds().getCopy();
+		figure.translateToAbsolute(bounds);
+		return bounds;
+	}
+	
+	public SWTBotGefEditPart activateDirectEdit() {
+		return activateDirectEdit(null);
+	}
+	
+	
+	public SWTBotGefEditPart activateDirectEdit(final Object feature) {
+		UIThreadRunnable.asyncExec(new VoidResult() {
+			public void run() {
+				DirectEditRequest request = new DirectEditRequest();
+				if (feature != null)
+					request.setDirectEditFeature(feature);
+				part().performRequest(request);
 			}
 		});
+		return this;
 	}
+
+
 	
 	/**
 	 * provide a description of this edit part that is useful for debugging purposes.

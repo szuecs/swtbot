@@ -1,25 +1,26 @@
 /*******************************************************************************
- * Copyright (c) 2008 Ketan Padegaonkar and others.
+ * Copyright (c) 2010 Ketan Padegaonkar and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
- *     Ketan Padegaonkar - initial API and implementation
+ *     Brock Janiczak - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swtbot.swt.recorder.methodargs;
+package org.eclipse.swtbot.swt.finder.matchers;
 
-/**
- * Represents a 'no arg' argument.
- * 
- * @author Ketan Padegaonkar &lt;KetanPadegaonkar [at] gmail [dot] com&gt;
- * @version $Id$
- */
-public class NullArgument extends AbstractSWTBotEventArguments {
+public class ObjectWithGetMessage {
+	private final String	message;
 
-	public String asString() {
-		return ""; //$NON-NLS-1$
+	/**
+	 * @param message
+	 */
+	public ObjectWithGetMessage(String message) {
+		this.message = message;
 	}
 
+	public String getMessage() {
+		return message;
+	}
 }

@@ -194,19 +194,41 @@ public class SWTBotTree extends AbstractSWTBot<Tree> {
 	 * @return this same instance.
 	 */
 	public SWTBotTree select(final String... items) {
+		waitForEnabled();
+		setFocus();
+		asyncExec(new VoidResult() {
+			public void run() {
+				List<TreeItem> selection = new ArrayList<TreeItem>();
+				for (String item : items) {
+					SWTBotTreeItem si = getTreeItem(item);
+					selection.add(si.widget);
+				}
+				if (!hasStyle(widget, SWT.MULTI) && items.length > 1)
+					log.warn("Tree does not support SWT.MULTI, cannot make multiple selections"); //$NON-NLS-1$
+				widget.setSelection(selection.toArray(new TreeItem[] {}));
+			}
+		});
+		notifySelect();
+		return this;
+	}
+	
+	/**
+	 * Selects the items in the array. Useful for cases where you're selecting items whose names are not unique, or
+	 * items you've exposed one at a time while traversing the tree.
+	 * 
+	 * @param items the items to select.
+	 * @return this same instance.
+	 */
+	public SWTBotTree select(final SWTBotTreeItem... items) {
 		assertEnabled();
 		setFocus();
 		asyncExec(new VoidResult() {
 			public void run() {
-				TreeItem[] treeItems = widget.getItems();
 				List<TreeItem> selection = new ArrayList<TreeItem>();
-				for (TreeItem treeItem : treeItems) {
-					for (String item : items) {
-						if (treeItem.getText().equals(item))
-							selection.add(treeItem);
-					}
+				for (SWTBotTreeItem treeItem : items) {
+					selection.add(treeItem.widget);
 				}
-				if (hasStyle(widget, SWT.MULTI) && items.length > 1)
+				if (!hasStyle(widget, SWT.MULTI) && items.length > 1)
 					log.warn("Tree does not support SWT.MULTI, cannot make multiple selections"); //$NON-NLS-1$
 				widget.setSelection(selection.toArray(new TreeItem[] {}));
 			}
@@ -221,7 +243,7 @@ public class SWTBotTree extends AbstractSWTBot<Tree> {
 	 * @return this same instance.
 	 */
 	public SWTBotTree unselect() {
-		assertEnabled();
+		waitForEnabled();
 		asyncExec(new VoidResult() {
 			public void run() {
 				log.debug(MessageFormat.format("Unselecting all in {0}", widget)); //$NON-NLS-1$
@@ -239,12 +261,12 @@ public class SWTBotTree extends AbstractSWTBot<Tree> {
 	 * @return this same instance.
 	 */
 	public SWTBotTree select(final int... indices) {
-		assertEnabled();
+		waitForEnabled();
 		setFocus();
 		asyncExec(new VoidResult() {
 			public void run() {
 				log.debug(MessageFormat.format("Selecting rows [{0}] in tree{1}", StringUtils.join(indices, ", "), this)); //$NON-NLS-1$ //$NON-NLS-2$
-				if (hasStyle(widget, SWT.MULTI) && indices.length > 1)
+				if (!hasStyle(widget, SWT.MULTI) && indices.length > 1)
 					log.warn("Tree does not support SWT.MULTI, cannot make multiple selections"); //$NON-NLS-1$
 				TreeItem items[] = new TreeItem[indices.length];
 				for (int i = 0; i < indices.length; i++)
@@ -282,7 +304,7 @@ public class SWTBotTree extends AbstractSWTBot<Tree> {
 	 * @throws WidgetNotFoundException if the node is not found.
 	 */
 	public SWTBotTreeItem expandNode(final String nodeText) throws WidgetNotFoundException {
-		assertEnabled();
+		waitForEnabled();
 		return getTreeItem(nodeText).expand();
 	}
 
@@ -294,7 +316,7 @@ public class SWTBotTree extends AbstractSWTBot<Tree> {
 	 * @throws WidgetNotFoundException if the node is not found.
 	 */
 	public SWTBotTreeItem collapseNode(final String nodeText) throws WidgetNotFoundException {
-		assertEnabled();
+		waitForEnabled();
 		return getTreeItem(nodeText).collapse();
 	}
 
@@ -337,7 +359,7 @@ public class SWTBotTree extends AbstractSWTBot<Tree> {
 	 * @throws WidgetNotFoundException if the node is not found.
 	 */
 	public SWTBotTreeItem expandNode(final String nodeText, final boolean recursive) throws WidgetNotFoundException {
-		assertEnabled();
+		waitForEnabled();
 		return syncExec(new Result<SWTBotTreeItem>() {
 			public SWTBotTreeItem run() {
 				SWTBotTreeItem item;
@@ -364,53 +386,6 @@ public class SWTBotTree extends AbstractSWTBot<Tree> {
 			}
 		});
 	}
-
-
-	// /**
-	// * Expand the node using the keyboard
-	// *
-	// * @param node the node to be expanded.
-	// * @param recursive if the expansion should be recursive.
-	// * @return the tree item that was expanded.
-	// * @throws WidgetNotFoundException if the node is not found.
-	// */
-	// public SWTBotTreeItem expandNode(final SWTBotTreeItem node, final boolean recursive) throws
-	// WidgetNotFoundException {
-	// assertEnabled();
-	// return syncExec(new Result<SWTBotTreeItem>() {
-	// public SWTBotTreeItem run() {
-	// try {
-	// expandNode(node);
-	// } catch (WidgetNotFoundException e) {
-	// throw new RuntimeException(e);
-	// }
-	// return node;
-	// }
-	//
-	// private void expandNode(SWTBotTreeItem node) throws WidgetNotFoundException {
-	// if(node.getItems().length != 0) {
-	// node.expandWithKeys();
-	//
-	// node.keyPress(SWT.ARROW_DOWN, true);
-	//
-	// if (recursive) {
-	// expandTreeItem(node);
-	// }
-	// }
-	// else {
-	// keyPress(SWT.ARROW_DOWN, true);
-	// return;
-	// }
-	// }
-	//
-	// private void expandTreeItem(SWTBotTreeItem node) throws WidgetNotFoundException {
-	// SWTBotTreeItem[] items = node.getItems();
-	// for (SWTBotTreeItem item : items) {
-	// expandNode(item);
-	// }
-	// }
-	// });
-	// }
 
 	/**
 	 * Gets the tree item matching the given name.
@@ -492,31 +467,4 @@ public class SWTBotTree extends AbstractSWTBot<Tree> {
 		});
 	}
 
-	// /**
-	// * Expands all of the nodes in the tree
-	// */
-	// public void expandNodes() {
-	// SWTBotTreeItem[] children = getAllItems();
-	// for (SWTBotTreeItem node : children) {
-	// expandNode(node, true);
-	// }
-	// }
-	//
-	// /**
-	// * Collapses all of the nodes in the tree
-	// */
-	// public void collapseNodes() {
-	// SWTBotTreeItem[] children = getAllItems();
-	// for (SWTBotTreeItem node : children) {
-	// System.out.println("Pressing left key");
-	// node.keyPress(SWT.ARROW_LEFT, true);
-	// try {
-	// Thread.sleep(500);
-	// } catch (InterruptedException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	// node.keyPress(SWT.ARROW_DOWN, true);
-	// }
-	// }
 }

@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2009 Ketan Padegaonkar and others.
+ * Copyright (c) 2009 Obeo and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *     Ketan Padegaonkar - initial API and implementation
+ *     Mariot Chauvin <mariot.chauvin@obeo.fr> - initial API and implementation
  *******************************************************************************/
 package org.eclipse.swtbot.swt.finder.widgets;
 
@@ -16,22 +16,21 @@ import org.eclipse.swtbot.swt.finder.ReferenceBy;
 import org.eclipse.swtbot.swt.finder.SWTBotWidget;
 import org.eclipse.swtbot.swt.finder.Style;
 import org.eclipse.swtbot.swt.finder.exceptions.WidgetNotFoundException;
-import org.eclipse.swtbot.swt.finder.results.BoolResult;
-import org.eclipse.swtbot.swt.finder.results.VoidResult;
 import org.eclipse.swtbot.swt.finder.utils.MessageFormat;
 import org.eclipse.swtbot.swt.finder.utils.SWTUtils;
 import org.eclipse.swtbot.swt.finder.utils.internal.Assert;
 import org.hamcrest.SelfDescribing;
 
 /**
- * Represents a tool item of type checkbox
+ * This represents a toolbar item that is a separator.
  *
  * @author Ketan Padegaonkar &lt;KetanPadegaonkar [at] gmail [dot] com&gt;
- * @version $Id$
+ * @version $Id: SWTBotToolbarDropDownButton.java 431 2009-11-06 07:11:15Z kpadegaonka $
+ * @since 2.0
  */
-@SWTBotWidget(clasz = ToolItem.class, preferredName = "toolbarRadioButton", style = @Style(name = "SWT.RADIO", value = SWT.RADIO), referenceBy = {
-		ReferenceBy.MNEMONIC, ReferenceBy.TOOLTIP }, returnType = SWTBotToolbarRadioButton.class)
-public class SWTBotToolbarRadioButton extends SWTBotToolbarButton {
+@SWTBotWidget(clasz = ToolItem.class, preferredName = "toolbarSeparatorButton", style = @Style(name = "SWT.SEPARATOR", value = SWT.SEPARATOR), referenceBy = {
+		ReferenceBy.MNEMONIC, ReferenceBy.TOOLTIP }, returnType = SWTBotToolbarButton.class)
+public class SWTBotToolbarSeparatorButton extends SWTBotToolbarButton {
 
 	/**
 	 * Constructs an new instance of this item.
@@ -39,72 +38,33 @@ public class SWTBotToolbarRadioButton extends SWTBotToolbarButton {
 	 * @param w the tool item.
 	 * @throws WidgetNotFoundException if the widget is <code>null</code> or widget has been disposed.
 	 */
-	public SWTBotToolbarRadioButton(ToolItem w) throws WidgetNotFoundException {
+	public SWTBotToolbarSeparatorButton(ToolItem w) throws WidgetNotFoundException {
 		this(w, null);
 	}
 
 	/**
 	 * Constructs an new instance of this item.
-	 *
+	 * 
 	 * @param w the tool item.
 	 * @param description the description of the widget, this will be reported by {@link #toString()}
 	 * @throws WidgetNotFoundException if the widget is <code>null</code> or widget has been disposed.
 	 */
-	public SWTBotToolbarRadioButton(ToolItem w, SelfDescribing description) throws WidgetNotFoundException {
+	public SWTBotToolbarSeparatorButton(ToolItem w, SelfDescribing description) throws WidgetNotFoundException {
 		super(w, description);
-		Assert.isTrue(SWTUtils.hasStyle(w, SWT.RADIO), "Expecting a radio button."); //$NON-NLS-1$
+		Assert.isTrue(SWTUtils.hasStyle(w, SWT.SEPARATOR), "Expecting a separator button."); //$NON-NLS-1$
+
 	}
 
 	/**
-	 * Click on the tool item. This will toggle the tool item.
+	 * Click on the tool item.
 	 *
-	 * @return itself
+	 * @since 2.0
 	 */
-	public SWTBotToolbarRadioButton toggle() {
+	public SWTBotToolbarSeparatorButton click() {
 		log.debug(MessageFormat.format("Clicking on {0}", this)); //$NON-NLS-1$
 		waitForEnabled();
-		internalToggle();
 		sendNotifications();
 		log.debug(MessageFormat.format("Clicked on {0}", this)); //$NON-NLS-1$
 		return this;
-	}
-
-	public SWTBotToolbarRadioButton click() {
-		return toggle();
-	}
-
-	private void internalToggle() {
-		syncExec(new VoidResult() {
-			public void run() {
-				widget.setSelection(!widget.getSelection());
-			}
-		});
-	}
-
-	/**
-	 * Selects the checkbox button.
-	 */
-	public void select() {
-		if (!isChecked())
-			toggle();
-	}
-
-	/**
-	 * Deselects the checkbox button.
-	 */
-	public void deselect() {
-		if (isChecked())
-			toggle();
-	}
-
-	/**
-	 * @return <code>true</code> if the button is checked, <code>false</code> otherwise.
-	 */
-	public boolean isChecked() {
-		return syncExec(new BoolResult() {
-			public Boolean run() {
-				return widget.getSelection();
-			}
-		});
 	}
 }
