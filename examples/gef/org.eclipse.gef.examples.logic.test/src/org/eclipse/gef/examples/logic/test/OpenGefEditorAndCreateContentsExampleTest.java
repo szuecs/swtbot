@@ -22,20 +22,21 @@ import org.eclipse.swtbot.swt.finder.exceptions.WidgetNotFoundException;
 import org.eclipse.swtbot.swt.finder.matchers.AbstractMatcher;
 import org.hamcrest.Description;
 
-public class OpenGefEditorTest extends SWTBotGefTestCase {
+public class OpenGefEditorAndCreateContentsExampleTest extends SWTBotGefTestCase {
 
 
 	private NewEmptyEmfProject emfProject = new NewEmptyEmfProject();
+	
 	private CreateLogicDiagram logicDiagram = new CreateLogicDiagram();
 
-
+	private SWTBotGefEditor editor;
+	
 
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
 		closeWelcomePage();
 	}
-
 
 	private void closeWelcomePage() {
 		try {
@@ -49,24 +50,13 @@ public class OpenGefEditorTest extends SWTBotGefTestCase {
 		bot.menu("File").menu("Save").click();
 	}
 
-	public void testCreateFile() throws Exception {
-
+	public void testCreateContents() throws Exception {
 		emfProject.createProject("test");
 		logicDiagram.createFile("test", "test.logic");
-		SWTBotGefEditor editor = bot.gefEditor("test.logic");
+		editor = bot.gefEditor("test.logic");
 		createContents(editor);
 		saveCurrentEditor();
-		bot.sleep(3000);	
 	}
-
-//	public void testCreateMFile() throws Exception {
-//		emfProject.createProject("testM");
-//		logicDiagram.createMFile("testM", "test.logicm");
-//		final SWTBotGefEditor editor = bot.gefEditor("Logic M Graphical Editor");	
-//		createContents(editor);
-//		saveCurrentEditor();
-//		bot.sleep(3000);	
-//	}
 
 	private void createContents(final SWTBotGefEditor editor) {
 
