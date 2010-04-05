@@ -1,6 +1,27 @@
 <project name="org.eclipse.swtbot.releng" default="all" basedir=".">
 
+	<!-- load up the properties for cruise agents based on their hostnames, if available -->
+	<exec executable="hostname" outputproperty="hostname" />
+	<property file="host-conf/build.${hostname}.properties" />
+
+	<!-- Load up the basic properties -->
 	<property file="build.developer.properties" />
+
+	<!-- Load up the eclipse version specific properties -->
+	<available file="build-conf/e${eclipse.version}.properties" property="eclipse-conf-available" />
+	<fail unless="eclipse-conf-available" message="Could not find file 'build-conf/e${eclipse.version}.properties'" />
+	<property file="build-conf/e${eclipse.version}.properties" />
+
+	<!-- Load up the platform specific properties -->
+	<available file="build-conf/${os}.${ws}.${arch}.properties" property="build-conf-available" />
+	<fail unless="build-conf-available" message="Could not find file 'build-conf/${os}.${ws}.${arch}.properties'" />
+	<property file="build-conf/${os}.${ws}.${arch}.properties" />
+
+	<!-- Load up the gef specific properties -->
+	<available file="build-conf/gef.properties" property="gef-conf-available" />
+	<fail unless="gef-conf-available" message="Could not find file 'build-conf/gef.properties'" />
+	<property file="build-conf/gef.properties" />
+
 	<property file="build.default.properties" />
 	<import file="check-prerequisites.xml" />
 
@@ -73,7 +94,8 @@
 				<include name="${feature.id}/**" />
 				<include name="${feature.id.test}/**" />
 				<include name="org.eclipse.swtbot.eclipse/**" />
-				<include name="org.eclipse.swtbot.eclipse.test/**" />
+				<include name="org.eclipse.swtbot.eclipse.test.junit3/**" />
+				<include name="org.eclipse.swtbot.eclipse.test.junit4/**" />
 				<include name="org.eclipse.swtbot.eclipse.gef/**" />
 			</fileset>
 		</sync>
@@ -95,8 +117,9 @@
 				<exclude name="${feature.id}/**" />
 				<exclude name="${feature.id.test}/**" />
 				<exclude name="org.eclipse.swtbot.eclipse/**" />
-				<include name="org.eclipse.swtbot.eclipse.test/**" />
 				<exclude name="org.eclipse.swtbot.eclipse.gef/**" />
+				<exclude name="org.eclipse.swtbot.eclipse.test.junit3/**" />
+				<exclude name="org.eclipse.swtbot.eclipse.test.junit4/**" />
 				<!-- the update site -->
 				<exclude name="org.eclipse.swtbot.updatesite/**" />
 				<!-- also exclude the generated class files -->
@@ -364,7 +387,8 @@
 			<fileset dir="artifacts">
 				<include name="org.eclipse.swtbot-${all.buildId}.zip" />
 				<include name="org.eclipse.swtbot.eclipse-${all.buildId}.zip" />
-				<include name="org.eclipse.swtbot.eclipse.test-${all.buildId}.zip" />
+				<include name="org.eclipse.swtbot.eclipse.test.junit3-${all.buildId}.zip" />
+				<include name="org.eclipse.swtbot.eclipse.test.junit4-${all.buildId}.zip" />
 				<include name="org.eclipse.swtbot.eclipse.gef-${all.buildId}.zip" />
 			</fileset>
 		</copy>

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.swtbot.swt.finder.SWTBot;
+import org.eclipse.swtbot.swt.finder.exceptions.AssertionFailedException;
 import org.eclipse.swtbot.swt.finder.finders.AbstractSWTTestCase;
 import org.eclipse.swtbot.swt.finder.utils.TableCollection;
 import org.eclipse.swtbot.swt.finder.utils.TableRow;
@@ -213,6 +214,19 @@ public class SWTBotTreeTest extends AbstractSWTTestCase {
 		assertTextContains("MouseUp [4]: MouseEvent{Tree {}", listener);
 
 		assertTextContains("MouseDoubleClick [8]: MouseEvent{Tree {} ", listener);
+	}
+
+	@Test
+	public void expandANodePath() throws Exception {
+		SWTBotTree tree = bot.treeInGroup("Tree");
+
+		tree.expandNode("Node 2", "Node 2.2", "Node 2.2.1");
+		assertEquals(7, tree.visibleRowCount());
+	}
+
+	@Test(expected=AssertionFailedException.class)
+	public void expandEmptyPath() throws Exception {
+		bot.tree().expandNode();
 	}
 
 	public void setUp() throws Exception {
