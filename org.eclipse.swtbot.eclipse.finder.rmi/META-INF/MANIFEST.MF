@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: SWTBot Eclipse Control Finder Plug-in (incubation)
+Bundle-SymbolicName: org.eclipse.swtbot.eclipse.finder.rmi;singleton:=true
+Bundle-Version: 2.0.0.qualifier
+Bundle-Activator: org.eclipse.swtbot.eclipse.finder.rmi.Activator
+Bundle-ActivationPolicy: lazy
+Bundle-Vendor: Eclipse.org
+Export-Package: org.eclipse.swtbot.eclipse.finder.rmi
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-ClassPath: .
+Import-Package: javax.swing.text,
+ junit.framework;version="4.3.1",
+ org.apache.log4j;version="1.2.12",
+ org.eclipse.core.commands,
+ org.eclipse.core.commands.common,
+ org.eclipse.core.runtime;version="3.4.0",
+ org.eclipse.jface.action,
+ org.eclipse.jface.bindings.keys,
+ org.eclipse.jface.resource,
+ org.eclipse.swtbot.eclipse.finder
+ org.hamcrest;version="1.1.0",
+ org.osgi.framework;version="1.4.0"
+Require-Bundle: org.eclipse.swtbot.eclipse.finder;bundle-version="2.0.0";visibility:=reexport

@@ -1,0 +1,6 @@
+#Mo  5 Apr 2010 16:15:36 UTC
+eclipse.preferences.version=1
+org.moreunit.flexiblenaming=true
+org.moreunit.prefixes=
+org.moreunit.unitsourcefolder=org.eclipse.swtbot.eclipse.finder.rmi\:src\:org.eclipse.swtbot.eclipse.finder.rmi.test\:src
+org.moreunit.useprojectsettings=true
